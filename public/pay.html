@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Pay with PayPal</title>
+  <!-- Replace with your own sandbox/live client-id -->
+  <script src="https://www.paypal.com/sdk/js?client-id=AZfCqrjxOC_9RWEKmVWsvti66uxwAuZf3pKWmrHhZxh83HdJSDHkDueiIbrhFe6QcqO36bhAi8DjVua4"></script>
+</head>
+<body>
+
+  <h2>Buy Product</h2>
+
+  <!-- put your productId into a data- attribute here -->
+  <div
+    id="paypal-button-container"
+    data-product-id="685033bd0af6a375612d5ff6"
+  ></div>
+
+  <script>
+    // read the productId from the DOM
+    const container = document.getElementById('paypal-button-container');
+    const productId = container.dataset.productId;
+
+    paypal.Buttons({
+      createOrder: async () => {
+        const res = await fetch("http://localhost:9000/api/paypal/create-order", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ productId })
+        });
+        const { orderID } = await res.json();
+        return orderID;
+      },
+
+      onApprove: async (data) => {
+        const res = await fetch("http://localhost:9000/api/paypal/capture-order", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ orderID: data.orderID, productId })
+        });
+        const result = await res.json();
+        alert("Payment Successful!");
+        console.log(result);
+        // e.g.: window.location.href = `/thankyou.html?orderID=${data.orderID}`
+      }
+    }).render("#paypal-button-container");
+  </script>
+</body>
+</html>
